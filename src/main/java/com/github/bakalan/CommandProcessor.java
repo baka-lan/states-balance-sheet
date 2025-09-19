@@ -32,7 +32,7 @@ public class CommandProcessor {
             return CommandResult.CONTINUE;
         }
 
-        // новый блок: команды от имени штата
+        // state command
         String possibleState = parts[0];
         if (states.containsKey(possibleState)) {
             handleStateCommand(possibleState, parts);
@@ -59,6 +59,10 @@ public class CommandProcessor {
 
         try {
             int balance = Integer.parseInt(balanceStr);
+            if (balance < 0) {
+                System.out.println("Balance must be positive");
+                return;
+            }
             if (states.containsKey(stateName)) {
                 System.out.println("State \"" + stateName + "\" already exists. Nothing changes.");
             } else {
@@ -81,6 +85,7 @@ public class CommandProcessor {
         switch (action) {
             case "PAY" -> handlePayCommand(stateName, parts);
             case "REC" -> handleRecCommand(stateName, parts);
+            case "TRD" -> handleTrdCommand(stateName, parts);
             default -> System.out.println("Unknown action for state: " + action);
         }
     }
@@ -138,6 +143,47 @@ public class CommandProcessor {
 
             states.put(stateName, states.get(stateName) + amount);
             System.out.printf("%s received %d%n", stateName, amount);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid amount format: " + parts[2]);
+        }
+    }
+
+    private void handleTrdCommand(String stateName, String[] parts) {
+        if (parts.length != 3) {
+            System.out.println("Invalid TRD command. Usage: {state} TRD {amount}");
+            return;
+        }
+
+        if (stateOrder.isEmpty()) {
+            System.out.println("No states available for TRD operation.");
+            return;
+        }
+
+        try {
+            int amount = Integer.parseInt(parts[2]);
+            if (amount <= 0) {
+                System.out.println("Amount must be positive");
+                return;
+            }
+
+            String firstState = stateOrder.get(0);
+            if (stateName.equals(firstState)) {
+                // первый штат налог не платит
+                states.put(stateName, states.get(stateName) + amount);
+                System.out.printf("%s received %d (no tax applied)%n", stateName, amount);
+            } else {
+                int rounded = (amount / 100) * 100; // округляем вниз до сотен
+                int tax = (int) (rounded * 0.2);
+                int net = amount - tax;
+
+                states.put(stateName, states.get(stateName) + net);
+                if (tax > 0) {
+                    states.put(firstState, states.get(firstState) + tax);
+                }
+
+                System.out.printf("%s received %d, %s received %d (tax)%n",
+                    stateName, net, firstState, tax);
+            }
         } catch (NumberFormatException e) {
             System.out.println("Invalid amount format: " + parts[2]);
         }
