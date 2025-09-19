@@ -1,0 +1,44 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+
+# Build output
+/target/
+
+# Logs
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Maven
+log/
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Eclipse (на всякий случай, если кто-то будет открывать в Eclipse)
+*.classpath
+*.project
+*.settings/
+
+# VS Code (если кто-то решит открыть там)
+.vscode/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# Java-specific
+hs_err_pid*
+replay_pid*
+
+# Environment files
+.env
