@@ -32,7 +32,7 @@ public class CommandProcessor {
             return CommandResult.CONTINUE;
         }
 
-        // новый блок: проверяем, что это похоже на stateCommand
+        // новый блок: команды от имени штата
         String possibleState = parts[0];
         if (states.containsKey(possibleState)) {
             handleStateCommand(possibleState, parts);
@@ -49,7 +49,6 @@ public class CommandProcessor {
     }
 
     private void handleAddCommand(String[] parts) {
-        // ожидаем строку вида: ADD STATE BALANCE
         if (parts.length != 3) {
             System.out.println("Invalid ADD command. Usage: add {stateName} {stateBalance}");
             return;
@@ -64,7 +63,7 @@ public class CommandProcessor {
                 System.out.println("State \"" + stateName + "\" already exists. Nothing changes.");
             } else {
                 states.put(stateName, balance);
-                stateOrder.add(stateName); // сохраняем порядок добавления
+                stateOrder.add(stateName);
                 System.out.println("New state \"" + stateName + "\" added");
             }
         } catch (NumberFormatException e) {
@@ -99,19 +98,24 @@ public class CommandProcessor {
                 return;
             }
 
+            int currentBalance = states.get(fromState);
+            if (currentBalance < amount) {
+                System.out.printf("Insufficient funds: %s has %d but tried to pay %d%n",
+                    fromState, currentBalance, amount);
+                return;
+            }
+
             if (parts.length == 4) {
                 String toState = parts[3];
                 if (!states.containsKey(toState)) {
                     System.out.println("Target state not found: " + toState);
                     return;
                 }
-                // перевод
-                states.put(fromState, states.get(fromState) - amount);
+                states.put(fromState, currentBalance - amount);
                 states.put(toState, states.get(toState) + amount);
                 System.out.printf("%s paid %d to %s%n", fromState, amount, toState);
             } else {
-                // списание
-                states.put(fromState, states.get(fromState) - amount);
+                states.put(fromState, currentBalance - amount);
                 System.out.printf("%s lost %d%n", fromState, amount);
             }
         } catch (NumberFormatException e) {
