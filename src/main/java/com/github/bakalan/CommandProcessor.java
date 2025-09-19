@@ -75,6 +75,10 @@ public class CommandProcessor {
             System.out.printf("    %-10s |    %5d%n", stateName, balance);
         }
 
+        int sum = states.values().stream().mapToInt(value -> value).sum();
+        System.out.println("====================================");
+        System.out.printf("    %-10s |    %5d%n", "SUM", sum);
+
         System.out.println("""
                 ************************************
                                                 v0.1
