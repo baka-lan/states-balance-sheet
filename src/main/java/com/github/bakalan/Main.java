@@ -43,10 +43,7 @@ public class Main {
                     scanner.close();
                     return;
                 }
-                case UNKNOWN -> {
-                    System.out.println("I don't know this command");
-                    processor.printStatesTable();
-                }
+                case UNKNOWN -> System.out.println("I don't know this command. Please try again.");
                 case CONTINUE -> processor.printStatesTable();
             }
         }
