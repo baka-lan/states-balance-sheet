@@ -10,6 +10,7 @@ public class CommandProcessor {
 
     private final Map<String, Integer> states = new HashMap<>();
     private final List<String> stateOrder = new ArrayList<>();
+    private final Map<String, Integer> changes = new HashMap<>();
 
     public CommandResult process(String input) {
         if (input == null || input.isBlank()) {
@@ -29,6 +30,12 @@ public class CommandProcessor {
 
         if (normalized.startsWith("ADD ")) {
             handleAddCommand(parts);
+            return CommandResult.CONTINUE;
+        }
+
+        if (normalized.equals("CLCH")) {
+            changes.clear();
+            System.out.println("Changes cleared");
             return CommandResult.CONTINUE;
         }
 
@@ -117,10 +124,16 @@ public class CommandProcessor {
                     return;
                 }
                 states.put(fromState, currentBalance - amount);
+                int fromStateChange = changes.get(fromState) == null ? 0 : changes.get(fromState);
+                changes.put(fromState, fromStateChange - amount);
                 states.put(toState, states.get(toState) + amount);
+                int toStateChange = changes.get(toState) == null ? 0 : changes.get(toState);
+                changes.put(toState, toStateChange + amount);
                 System.out.printf("%s paid %d to %s%n", fromState, amount, toState);
             } else {
                 states.put(fromState, currentBalance - amount);
+                int change = changes.get(fromState) == null ? 0 : changes.get(fromState);
+                changes.put(fromState, change - amount);
                 System.out.printf("%s lost %d%n", fromState, amount);
             }
         } catch (NumberFormatException e) {
@@ -142,6 +155,8 @@ public class CommandProcessor {
             }
 
             states.put(stateName, states.get(stateName) + amount);
+            int change = changes.get(stateName) == null ? 0 : changes.get(stateName);
+            changes.put(stateName, change + amount);
             System.out.printf("%s received %d%n", stateName, amount);
         } catch (NumberFormatException e) {
             System.out.println("Invalid amount format: " + parts[2]);
@@ -170,6 +185,8 @@ public class CommandProcessor {
             if (stateName.equals(firstState)) {
                 // первый штат налог не платит
                 states.put(stateName, states.get(stateName) + amount);
+                int change = changes.get(stateName) == null ? 0 : changes.get(stateName);
+                changes.put(stateName, change + amount);
                 System.out.printf("%s received %d (no tax applied)%n", stateName, amount);
             } else {
                 int rounded = (amount / 100) * 100; // округляем вниз до сотен
@@ -177,8 +194,12 @@ public class CommandProcessor {
                 int net = amount - tax;
 
                 states.put(stateName, states.get(stateName) + net);
+                int change = changes.get(stateName) == null ? 0 : changes.get(stateName);
+                changes.put(stateName, change + net);
                 if (tax > 0) {
-                    states.put(firstState, states.get(firstState) + tax);
+                    int firstStateChange = changes.get(stateName) == null ? 0 : changes.get(stateName);
+                    states.put(firstState, firstStateChange + tax);
+                    changes.put(firstState, tax);
                 }
 
                 System.out.printf("%s received %d, %s received %d (tax)%n",
@@ -191,25 +212,39 @@ public class CommandProcessor {
 
     public void printStatesTable() {
         System.out.println("""
-                ------------------------------------
-                         current condition:
-                ************************************
-                        States Balance Sheet
-                ************************************
-                   Name        |   Balance""");
+            ------------------------------------
+                     current condition:
+            ************************************
+                    States Balance Sheet
+            ************************************
+               Name    |   Balance   |  Change""");
 
         for (String stateName : stateOrder) {
             Integer balance = states.get(stateName);
-            System.out.printf("    %-10s |    %5d%n", stateName, balance);
+            Integer change = changes.get(stateName);
+            String changeString;
+            if (change == null || change == 0) {
+                changeString = " ---";
+            } else {
+                changeString = change >= 0 ? "+" + change : String.valueOf(change);
+            }
+            System.out.printf("    %-6s |    %5d    |  %s%n", stateName, balance, changeString);
         }
 
         int sum = states.values().stream().mapToInt(value -> value).sum();
+        int sumOfChanges = changes.values().stream().mapToInt(value -> value).sum();
+        String sumOfChangesString;
+        if (sumOfChanges == 0) {
+            sumOfChangesString = " ---";
+        } else {
+            sumOfChangesString = sumOfChanges >= 0 ? "+" + sumOfChanges : String.valueOf(sumOfChanges);
+        }
         System.out.println("====================================");
-        System.out.printf("    %-10s |    %5d%n", "SUM", sum);
+        System.out.printf("    %-6s |    %5d    |  %s%n", "SUM", sum, sumOfChangesString);
 
         System.out.println("""
-                ************************************
-                                                v0.1
-                ------------------------------------""");
+            ************************************
+                                            v0.1
+            ------------------------------------""");
     }
 }
