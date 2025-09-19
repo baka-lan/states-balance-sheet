@@ -28,24 +28,26 @@ public class Main {
         System.out.println(WELCOME_MESSAGE);
 
         Scanner scanner = new Scanner(System.in);
+        CommandProcessor processor = new CommandProcessor();
+
         while (true) {
             System.out.print("> "); // приглашение для ввода
             String input = scanner.nextLine();
             System.out.println("You entered: " + input);
 
-            if (input == null) {
-                continue;
-            }
+            CommandProcessor.CommandResult result = processor.process(input);
 
-            String normalized = input.trim().toLowerCase();
-            if (normalized.equals("q") ||
-                normalized.equals("quit") ||
-                normalized.equals("exit")) {
-                System.out.println(TERMINATE_MESSAGE);
-                break;
+            switch (result) {
+                case EXIT -> {
+                    System.out.println(TERMINATE_MESSAGE);
+                    scanner.close();
+                    return;
+                }
+                case UNKNOWN -> System.out.println("I don't know this command");
+                case CONTINUE -> {
+                    // пока не используем, но пригодится для будущих команд
+                }
             }
         }
-
-        scanner.close();
     }
 }
