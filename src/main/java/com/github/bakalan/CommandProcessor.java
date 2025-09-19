@@ -81,6 +81,7 @@ public class CommandProcessor {
         String action = parts[1];
         switch (action) {
             case "PAY" -> handlePayCommand(stateName, parts);
+            case "REC" -> handleRecCommand(stateName, parts);
             default -> System.out.println("Unknown action for state: " + action);
         }
     }
@@ -113,6 +114,26 @@ public class CommandProcessor {
                 states.put(fromState, states.get(fromState) - amount);
                 System.out.printf("%s lost %d%n", fromState, amount);
             }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid amount format: " + parts[2]);
+        }
+    }
+
+    private void handleRecCommand(String stateName, String[] parts) {
+        if (parts.length != 3) {
+            System.out.println("Invalid REC command. Usage: {state} REC {amount}");
+            return;
+        }
+
+        try {
+            int amount = Integer.parseInt(parts[2]);
+            if (amount <= 0) {
+                System.out.println("Amount must be positive");
+                return;
+            }
+
+            states.put(stateName, states.get(stateName) + amount);
+            System.out.printf("%s received %d%n", stateName, amount);
         } catch (NumberFormatException e) {
             System.out.println("Invalid amount format: " + parts[2]);
         }
