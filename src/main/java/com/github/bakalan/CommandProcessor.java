@@ -197,9 +197,9 @@ public class CommandProcessor {
                 int change = changes.get(stateName) == null ? 0 : changes.get(stateName);
                 changes.put(stateName, change + net);
                 if (tax > 0) {
-                    int firstStateChange = changes.get(stateName) == null ? 0 : changes.get(stateName);
-                    states.put(firstState, firstStateChange + tax);
-                    changes.put(firstState, tax);
+                    int firstStateChange = changes.get(firstState) == null ? 0 : changes.get(firstState);
+                    states.put(firstState, states.get(firstState) + tax);
+                    changes.put(firstState, firstStateChange + tax);
                 }
 
                 System.out.printf("%s received %d, %s received %d (tax)%n",
